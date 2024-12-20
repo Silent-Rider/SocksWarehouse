@@ -12,18 +12,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.socks_warehouse.common.Color;
 import com.example.socks_warehouse.dto.SockDTO;
-import com.example.socks_warehouse.exception.FileProcessingException;
-import com.example.socks_warehouse.exception.InsufficientSocksException;
-import com.example.socks_warehouse.exception.SocksNotFoundException;
+import com.example.socks_warehouse.exception.*;
 import com.example.socks_warehouse.model.Sock;
 import com.example.socks_warehouse.repository.SockRepository;
 import com.example.socks_warehouse.validation.DataValidator;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 
 @Service
 public class SockService {

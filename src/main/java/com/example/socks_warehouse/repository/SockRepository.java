@@ -11,5 +11,6 @@ import com.example.socks_warehouse.model.Sock;
 
 @Repository
 public interface SockRepository extends JpaRepository<Sock, Long>, JpaSpecificationExecutor<Sock> {
+    
     Optional<Sock> findByColorAndCottonPart(Color color, int cottonPart);
 }

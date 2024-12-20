@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FileProcessingException.class)
     public ResponseEntity<String> handleFileProcessingException(FileProcessingException e) {
-        return ResponseEntity.badRequest().body("File processing error: " + e.getMessage());
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
     }
     
     @ExceptionHandler(SocksNotFoundException.class)

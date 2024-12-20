@@ -7,10 +7,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.socks_warehouse.common.Color;
+import com.example.socks_warehouse.common.Operator;
 import com.example.socks_warehouse.dto.SockDTO;
 import com.example.socks_warehouse.service.Filter;
 import com.example.socks_warehouse.service.SockService;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 
 
@@ -30,9 +34,8 @@ public class SockController {
     public ResponseEntity<String> registerIncome(@RequestParam String color, 
     @RequestParam short cottonPart, @RequestParam int quantity) {
         dataValidator.checkAttributes(color, cottonPart, quantity);
-        Color verifiedColor = Color.valueOf(color.toUpperCase());
         SockDTO dto = SockDTO.builder()
-                .color(verifiedColor)
+                .color(color)
                 .cottonPart(cottonPart)
                 .quantity(quantity)
                 .build();
@@ -44,9 +47,8 @@ public class SockController {
     public ResponseEntity<String> registerOutcome(@RequestParam String color, 
     @RequestParam short cottonPart, @RequestParam int quantity) {
         dataValidator.checkAttributes(color, cottonPart, quantity);
-        Color verifiedColor = Color.valueOf(color.toUpperCase());
         SockDTO dto = SockDTO.builder()
-                .color(verifiedColor)
+                .color(color)
                 .cottonPart(cottonPart)
                 .quantity(quantity)
                 .build();
@@ -55,17 +57,26 @@ public class SockController {
     }
 
     @GetMapping
-    public ResponseEntity<Integer> getMethodName(@RequestParam(required = false) String color, 
+    public ResponseEntity<Long> getCount(@RequestParam(required = false) String color, 
     @RequestParam(required = false) String operator, @RequestParam(required = false) Integer cottonPart) {
         dataValidator.checkFilters(color, operator, cottonPart);
-        Color verifiedColor = Color.valueOf(color.toUpperCase());
+        Operator verifiedOperator = Operator.valueOf(operator.toUpperCase());
         Filter filter = Filter.builder()
-                .color(verifiedColor)
-                .operator(operator)
+                .color(color.toUpperCase())
+                .operator(verifiedOperator)
                 .cottonPart(cottonPart)
                 .build();
-        int count = sockService.getCount(filter);
-        return ResponseEntity.ok(Integer.valueOf(count));
+        long count = sockService.getCount(filter);
+        return ResponseEntity.ok(count);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateSock(@PathVariable Long id, @RequestBody SockDTO dto) {
+        dataValidator.checkIfAllAttributesNull(dto);
+        dataValidator.checkAttributes(dto.getColor(), dto.getCottonPart(), dto.getQuantity());
+        dataValidator.checkId(id);
+        sockService.update(id, dto);
+        return ResponseEntity.ok("Entity successfully updated");
     }
     
 

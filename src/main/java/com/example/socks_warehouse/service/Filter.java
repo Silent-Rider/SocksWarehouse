@@ -1,6 +1,6 @@
 package com.example.socks_warehouse.service;
 
-import com.example.socks_warehouse.common.Color;
+import com.example.socks_warehouse.common.Operator;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +9,7 @@ import lombok.Data;
 @Builder
 public class Filter {
     
-    private Color color;
-    private String operator;
+    private String color;
+    private Operator operator;
     private Integer cottonPart;
 }

@@ -3,6 +3,7 @@ package com.example.socks_warehouse.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> handleSocksNotFoundException(HttpMessageNotReadableException e) {
-        return new ResponseEntity<>("Invalid input data", HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body("Invalid input data");
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<String> handleMissingParam(MissingServletRequestParameterException e){
+        return ResponseEntity.badRequest().body("Missed obligatory parameter");
     }
 }

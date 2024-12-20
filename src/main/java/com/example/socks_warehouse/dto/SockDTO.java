@@ -1,6 +1,6 @@
 package com.example.socks_warehouse.dto;
 
-import com.example.socks_warehouse.common.Color;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +9,9 @@ import lombok.Data;
 @Builder
 public class SockDTO {
     
+    @JsonIgnore
     private Long id;
-    private Color color;
-    private short cottonPart;
-    private int quantity;
+    private String color;
+    private Short cottonPart;
+    private Integer quantity;
 }

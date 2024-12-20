@@ -1,6 +1,5 @@
 package com.example.socks_warehouse.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +12,8 @@ import com.example.socks_warehouse.common.Operator;
 import com.example.socks_warehouse.dto.SockDTO;
 import com.example.socks_warehouse.service.Filter;
 import com.example.socks_warehouse.service.SockService;
+import com.example.socks_warehouse.validation.DataValidator;
+
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,7 +84,7 @@ public class SockController {
 
     @PostMapping("/batch")
     public ResponseEntity<String> addSocksBatch(@RequestParam("file") MultipartFile file) {
-        sockService.saveSocksFromExcel(file);
+        sockService.addSocksBatchFromExcel(file);
         return ResponseEntity.ok("Socks batch uploaded successfully.");
     }
     

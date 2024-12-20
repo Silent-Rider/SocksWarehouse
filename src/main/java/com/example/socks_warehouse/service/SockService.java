@@ -2,6 +2,7 @@ package com.example.socks_warehouse.service;
 
 import java.io.IOException;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -16,12 +17,15 @@ import com.example.socks_warehouse.exception.InsufficientSocksException;
 import com.example.socks_warehouse.exception.SocksNotFoundException;
 import com.example.socks_warehouse.model.Sock;
 import com.example.socks_warehouse.repository.SockRepository;
+import com.example.socks_warehouse.validation.DataValidator;
 
 @Service
 public class SockService {
 
     @Autowired
     private SockRepository sockRepository;
+    @Autowired
+    private DataValidator dataValidator;
 
     public void addSocks(SockDTO dto) {
         Color color = Color.valueOf(dto.getColor().toUpperCase());
@@ -58,18 +62,30 @@ public class SockService {
         sockRepository.save(sock);
     }
 
-    public void saveSocksFromExcel(MultipartFile file) {
+    public void addSocksBatchFromExcel(MultipartFile file) {
         try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
             XSSFSheet sheet = workbook.getSheetAt(0);
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; // пропускаем заголовок
-
-                String color = row.getCell(0).getStringCellValue();
-                int cottonPart = (int) row.getCell(1).getNumericCellValue();
-                int quantity = (int) row.getCell(2).getNumericCellValue();
+                if (row.getRowNum() == 0) continue; // skip heading
+                if (row.getPhysicalNumberOfCells() == 0) continue;
+                Cell colorCell = row.getCell(0);
+                Cell cottonPartCell = row.getCell(1);
+                Cell quantityCell = row.getCell(2);
+                dataValidator.checkCells(colorCell, cottonPartCell, quantityCell);
+                String color = colorCell.getStringCellValue();
+                short cottonPart = (short) cottonPartCell.getNumericCellValue();
+                int quantity = (int) quantityCell.getNumericCellValue();
+                dataValidator.checkAttributes(color, cottonPart, quantity);
+                Color verifiedColor = Color.valueOf(color.toUpperCase());
+                Sock sock = new Sock(verifiedColor, cottonPart, quantity);
+                sockRepository.save(sock);
             }
         } catch (IOException e){
-            throw new FileProcessingException("XML file processing error", e);
+            throw new FileProcessingException("XML file processing error");
+        } catch(IllegalArgumentException e){
+            throw new FileProcessingException("No sheet in XML file");
+        } catch(NullPointerException | IllegalStateException e){
+            throw new FileProcessingException(e.getMessage());
         }
     }
 }

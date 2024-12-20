@@ -1,7 +1,5 @@
 package com.example.socks_warehouse.service;
 
-import com.example.socks_warehouse.common.Operator;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +8,7 @@ import lombok.Data;
 public class Filter {
     
     private String color;
-    private Operator operator;
-    private Integer cottonPart;
+    private Integer cottonPart; // for exact match
+    private Integer minCottonPart;
+    private Integer maxCottonPart;
 }

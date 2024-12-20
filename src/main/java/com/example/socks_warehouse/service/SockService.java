@@ -19,6 +19,12 @@ import com.example.socks_warehouse.model.Sock;
 import com.example.socks_warehouse.repository.SockRepository;
 import com.example.socks_warehouse.validation.DataValidator;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+
 @Service
 public class SockService {
 
@@ -26,6 +32,8 @@ public class SockService {
     private SockRepository sockRepository;
     @Autowired
     private DataValidator dataValidator;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public void addSocks(SockDTO dto) {
         Color color = Color.valueOf(dto.getColor().toUpperCase());
@@ -46,8 +54,12 @@ public class SockService {
     }
 
     public long getSocksCount(Filter filter){
-        SockSpecification spec = new SockSpecification(filter);
-        return sockRepository.count(spec);
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> query = builder.createQuery(Long.class);
+        Root<Sock> root = query.from(Sock.class);
+        SockSpecification spec = new SockSpecification(filter, builder, query, root);
+        query = spec.toSumQuery();
+        return entityManager.createQuery(query).getSingleResult();
     }
 
     public void updateSock(Long id, SockDTO dto){

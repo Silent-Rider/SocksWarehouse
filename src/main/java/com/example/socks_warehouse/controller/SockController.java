@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.socks_warehouse.common.Operator;
 import com.example.socks_warehouse.dto.SockDTO;
 import com.example.socks_warehouse.service.Filter;
 import com.example.socks_warehouse.service.SockService;
@@ -60,14 +59,14 @@ public class SockController {
     }
 
     @GetMapping
-    public ResponseEntity<Long> countSocks(@RequestParam(required = false) String color, 
-    @RequestParam(required = false) String operator, @RequestParam(required = false) Integer cottonPart) {
-        dataValidator.checkFilters(color, operator, cottonPart);
-        Operator verifiedOperator = Operator.valueOf(operator.toUpperCase());
+    public ResponseEntity<Long> countSocks(@RequestParam(required = false) String color, @RequestParam(required = false) Integer cottonPart,
+    @RequestParam(required = false) Integer minCottonPart, @RequestParam(required = false) Integer maxCottonPart) {
+        dataValidator.checkFilters(color, cottonPart, minCottonPart, maxCottonPart);
         Filter filter = Filter.builder()
                 .color(color.toUpperCase())
-                .operator(verifiedOperator)
                 .cottonPart(cottonPart)
+                .minCottonPart(minCottonPart)
+                .maxCottonPart(maxCottonPart)
                 .build();
         long count = sockService.getSocksCount(filter);
         return ResponseEntity.ok(count);

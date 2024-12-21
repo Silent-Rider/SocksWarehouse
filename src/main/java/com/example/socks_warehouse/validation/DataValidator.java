@@ -16,8 +16,7 @@ public class DataValidator {
 
     public void checkAttributes(String color, Short cottonPart, Integer quantity){
         if(color != null) checkColor(color);
-        if ((cottonPart != null) && (cottonPart < 0 || cottonPart > 100))
-            throw new InvalidDataFormatException("Cotton part must be between 0 and 100");
+        if (cottonPart != null) checkCottonPart((int)cottonPart); 
         if (quantity != null && quantity <= 0)
             throw new InvalidDataFormatException("Quantity must be greater than 0");
     }

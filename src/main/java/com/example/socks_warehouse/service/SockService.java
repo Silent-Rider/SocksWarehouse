@@ -1,6 +1,8 @@
 package com.example.socks_warehouse.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -12,15 +14,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.socks_warehouse.common.Color;
 import com.example.socks_warehouse.dto.SockDTO;
-import com.example.socks_warehouse.exception.*;
+import com.example.socks_warehouse.exception.FileProcessingException;
+import com.example.socks_warehouse.exception.InsufficientSocksException;
+import com.example.socks_warehouse.exception.SocksNotFoundException;
 import com.example.socks_warehouse.model.Sock;
 import com.example.socks_warehouse.repository.SockRepository;
 import com.example.socks_warehouse.validation.DataValidator;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.criteria.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class SockService {
 
@@ -43,8 +52,10 @@ public class SockService {
         Color color = Color.valueOf(dto.getColor().toUpperCase());
         Sock sock = sockRepository.findByColorAndCottonPart(color, dto.getCottonPart())
             .orElseThrow(() -> new SocksNotFoundException ("No socks found matching the specified params"));
+        log.info("POST /outcome: Found socks matching specified params");
         if (sock.getQuantity() < dto.getQuantity())
             throw new InsufficientSocksException("Not enough socks in stock");
+        log.info("POST /outcome: Enough socks quantity to remove");
         sock.setQuantity(sock.getQuantity() - dto.getQuantity());
         sockRepository.save(sock);
     }
@@ -61,6 +72,7 @@ public class SockService {
     public void updateSock(Long id, SockDTO dto){
         Sock sock = sockRepository.findById(id)
             .orElseThrow(() -> new SocksNotFoundException ("No socks found matching the specified id"));
+        log.info("PUT /{}: Found socks matching specified id", id);
         if(dto.getColor() != null){
             Color color = Color.valueOf(dto.getColor().toUpperCase());
             sock.setColor(color);
@@ -71,23 +83,34 @@ public class SockService {
     }
 
     public void addSocksBatchFromExcel(MultipartFile file) {
+        List<SockDTO> batch = new ArrayList<>();
         try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
             XSSFSheet sheet = workbook.getSheetAt(0);
             for (Row row : sheet) {
                 if (row.getRowNum() == 0) continue; // skip heading
                 if (row.getPhysicalNumberOfCells() == 0) continue;
+                
                 Cell colorCell = row.getCell(0);
                 Cell cottonPartCell = row.getCell(1);
                 Cell quantityCell = row.getCell(2);
                 dataValidator.checkCells(colorCell, cottonPartCell, quantityCell);
+                log.info("POST /batch: Valid row of cells received from XML file");
+                
                 String color = colorCell.getStringCellValue();
                 short cottonPart = (short) cottonPartCell.getNumericCellValue();
                 int quantity = (int) quantityCell.getNumericCellValue();
                 dataValidator.checkAttributes(color, cottonPart, quantity);
-                Color verifiedColor = Color.valueOf(color.toUpperCase());
-                Sock sock = new Sock(verifiedColor, cottonPart, quantity);
-                sockRepository.save(sock);
+                log.info("POST /batch: Valid attribute set received from XML file " +
+                "for adding socks - color={}, cottonPart={}, quantity={}", color, cottonPart, quantity);
+
+                SockDTO dto = SockDTO.builder()
+                .color(color)
+                .cottonPart(cottonPart)
+                .quantity(quantity)
+                .build();
+                batch.add(dto);
             }
+            addSocksBatch(batch);
         } catch (IOException e){
             throw new FileProcessingException("XML file processing error");
         } catch(IllegalArgumentException e){
@@ -95,5 +118,10 @@ public class SockService {
         } catch(NullPointerException | IllegalStateException e){
             throw new FileProcessingException(e.getMessage());
         }
+    }
+
+    @Transactional
+    private void addSocksBatch(List<SockDTO> batch){
+        batch.forEach(dto -> addSocks(dto));
     }
 }
